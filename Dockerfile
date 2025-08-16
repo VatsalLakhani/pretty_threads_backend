@@ -1,10 +1,8 @@
 # ---- Build stage: install Composer deps ----
 FROM composer:2 AS vendor
 WORKDIR /app
-# Ensure composer can extract archives and clone repos
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends unzip git \
-    && rm -rf /var/lib/apt/lists/*
+# Ensure composer can extract archives and clone repos (Alpine base)
+RUN apk add --no-cache unzip git
 ENV COMPOSER_MEMORY_LIMIT=-1
 COPY composer.json composer.lock /app/
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
@@ -16,8 +14,10 @@ FROM php:8.2-apache
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libzip-dev \
+        zlib1g-dev \
         unzip \
         git \
+    && docker-php-ext-configure zip \
     && docker-php-ext-install \
         pdo_mysql \
         zip \
