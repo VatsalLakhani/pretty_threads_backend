@@ -1,6 +1,11 @@
 # ---- Build stage: install Composer deps ----
 FROM composer:2 AS vendor
 WORKDIR /app
+# Ensure composer can extract archives and clone repos
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip git \
+    && rm -rf /var/lib/apt/lists/*
+ENV COMPOSER_MEMORY_LIMIT=-1
 COPY composer.json composer.lock /app/
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
