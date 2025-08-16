@@ -12,14 +12,18 @@ RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --opt
 FROM php:8.2-apache
 
 # Install system deps and PHP extensions commonly needed by Laravel
+# Install system deps and PHP extensions commonly needed by Laravel
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libzip-dev \
         zlib1g-dev \
         unzip \
         git \
+        libonig-dev \
+        libpng-dev \
+        libxml2-dev \
     && docker-php-ext-configure zip \
-    && docker-php-ext-install -j1 \
+    && docker-php-ext-install -j$(nproc) \
         pdo_mysql \
         zip \
         bcmath \
@@ -27,7 +31,6 @@ RUN apt-get update \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /var/www/html
 
 # Copy app source
