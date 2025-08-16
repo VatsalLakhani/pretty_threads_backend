@@ -3,9 +3,10 @@ FROM composer:2 AS vendor
 WORKDIR /app
 # Ensure composer can extract archives and clone repos (Alpine base)
 RUN apk add --no-cache unzip git
-ENV COMPOSER_MEMORY_LIMIT=-1
+ENV COMPOSER_MEMORY_LIMIT=-1 \
+    COMPOSER_ALLOW_SUPERUSER=1
 COPY composer.json composer.lock /app/
-RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-scripts --ignore-platform-req=ext-*
 
 # ---- App stage: PHP with Apache ----
 FROM php:8.2-apache
@@ -18,10 +19,11 @@ RUN apt-get update \
         unzip \
         git \
     && docker-php-ext-configure zip \
-    && docker-php-ext-install \
+    && docker-php-ext-install -j1 \
         pdo_mysql \
         zip \
         bcmath \
+        mbstring \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
