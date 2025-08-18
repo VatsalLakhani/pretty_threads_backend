@@ -12,7 +12,8 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $only = $request->query('only', 'roots'); // roots|all
-        $withChildren = filter_var($request->query('with', 'subcategories'), FILTER_VALIDATE_BOOLEAN) !== false;
+        $withParam = strtolower((string) $request->query('with', 'children'));
+        $withChildren = in_array($withParam, ['1','true','on','yes','children','subcategories'], true);
 
         $query = Category::query()->orderBy('sort_order')->orderBy('name');
         if ($only === 'roots') {

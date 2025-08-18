@@ -1,3 +1,107 @@
+# Pretty Threads API (Laravel)
+
+Production-ready REST API for the Pretty Threads Flutter app. Includes authentication, catalog (categories, products), admin endpoints (users, products, categories, payments), media upload, and seeders with dummy data.
+
+## Requirements
+- PHP 8.2+
+- Composer
+- MySQL/MariaDB or SQLite
+- Laravel 11.x
+
+## Quick Start
+1) Install dependencies
+```
+composer install
+cp .env.example .env
+php artisan key:generate
+```
+
+2) Configure DB in `.env`
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=pretty_threads
+DB_USERNAME=root
+DB_PASSWORD=secret
+APP_URL=http://127.0.0.1:8000
+```
+
+3) Migrate and seed
+```
+php artisan migrate
+php artisan db:seed
+```
+Seeders create:
+- Admin user: email `admin@example.com`, password `password` (see `database/seeders/AdminUserSeeder.php`)
+- Categories/subcategories and products (including extra dummy data)
+
+Create storage symlink for images (once):
+```
+php artisan storage:link
+```
+
+4) Run API
+```
+php artisan serve
+```
+
+## Auth
+- Register: `POST /api/auth/register`
+- Login: `POST /api/auth/login`
+- Logout: `POST /api/auth/logout` (auth required)
+
+Blocked users cannot log in (403). Admin flag/blocked flag live on `users` table (`is_admin`, `is_blocked`).
+
+## Public Catalog
+- Categories (roots or all, include children):
+  - `GET /api/categories?only=roots|all&with=children|subcategories|true`
+- Products (active only, filters):
+  - `GET /api/products?category_id=ID&category_slug=slug&per_page=20`
+- One-call full catalog:
+  - `GET /api/catalog?only=roots|all&with_children=1&with_products=0|1`
+  - When `with_products=1`, each category node (and its children) includes a `products` array. The response also includes a flat `products` list.
+
+## Admin API (auth + admin middleware)
+Base path: `/api/admin`
+
+- Users
+  - `GET /api/admin/users?search=&per_page=20`
+  - `POST /api/admin/users/{id}/block`
+  - `POST /api/admin/users/{id}/unblock`
+
+- Categories
+  - `GET /api/admin/categories`
+  - `POST /api/admin/categories`
+  - `PUT /api/admin/categories/{id}`
+  - `DELETE /api/admin/categories/{id}`
+
+- Products
+  - `GET /api/admin/products?search=&category_id=&per_page=20`
+  - `POST /api/admin/products`
+  - `PUT /api/admin/products/{id}`
+  - `DELETE /api/admin/products/{id}`
+  - Image upload (both paths for compatibility):
+    - `POST /api/admin/products/{id}/image`
+    - `POST /api/products/{id}/image`
+
+- Payments
+  - `GET /api/admin/payments?status=&per_page=20`
+  - `GET /api/admin/payments/{id}`
+  - `PUT /api/admin/payments/{id}/status` (pending|paid|failed|refunded)
+  - `POST /api/admin/payments/{id}/refund` (stub, records in `meta.refunds`)
+
+## Notes
+- Media upload expects multipart form-data field name `image`.
+- Pagination uses Laravel length-aware paginator JSON.
+- CORS: configure in `config/cors.php` if consuming from mobile/web hosts.
+  - Example allow localhost/dev hosts:
+    - `paths`: ["api/*"]
+    - `allowed_origins`: ["http://127.0.0.1:8000", "http://10.0.2.2:8000", "http://localhost:3000", "http://localhost:8080"]
+  - Set `APP_URL` to your public base URL so generated URLs are correct.
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 # Laravel API Authentication

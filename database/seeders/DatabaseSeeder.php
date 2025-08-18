@@ -14,8 +14,10 @@ class DatabaseSeeder extends Seeder
     {
         // Seed catalog data
         $this->call([
+            AdminUserSeeder::class,
             CategorySeeder::class,
             ProductSeeder::class,
+            MoreDummyDataSeeder::class,
         ]);
     }
 }

@@ -1,12 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductMediaController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CatalogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +32,7 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{slug}', [CategoryController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
+Route::get('/catalog', [CatalogController::class, 'all']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -44,16 +47,36 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/password', [ProfileController::class, 'changePassword']);
     Route::delete('/user', [ProfileController::class, 'destroy']);
 
-    // Catalog admin CRUD (consider adding admin middleware later)
-    Route::post('/categories', [CategoryController::class, 'store']);
-    Route::put('/categories/{id}', [CategoryController::class, 'update']);
-    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+    // Admin-only routes
+    Route::prefix('admin')->middleware(EnsureUserIsAdmin::class)->group(function () {
+        // Users management
+        Route::get('/users', [\App\Http\Controllers\Api\Admin\UserAdminController::class, 'index']);
+        Route::post('/users/{id}/block', [\App\Http\Controllers\Api\Admin\UserAdminController::class, 'block']);
+        Route::post('/users/{id}/unblock', [\App\Http\Controllers\Api\Admin\UserAdminController::class, 'unblock']);
 
-    Route::post('/products', [ProductController::class, 'store']);
-    Route::put('/products/{id}', [ProductController::class, 'update']);
-    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+        // Categories CRUD
+        Route::get('/categories', [CategoryController::class, 'index']);
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::put('/categories/{id}', [CategoryController::class, 'update']);
+        Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
-    // Product media
+        // Products CRUD
+        Route::get('/products', [\App\Http\Controllers\Api\Admin\ProductAdminController::class, 'index']);
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{id}', [ProductController::class, 'update']);
+        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+        // Product media
+        Route::post('/products/{id}/image', [ProductMediaController::class, 'upload']);
+
+        // Payments
+        Route::get('/payments', [\App\Http\Controllers\Api\Admin\PaymentAdminController::class, 'index']);
+        Route::get('/payments/{id}', [\App\Http\Controllers\Api\Admin\PaymentAdminController::class, 'show']);
+        Route::put('/payments/{id}/status', [\App\Http\Controllers\Api\Admin\PaymentAdminController::class, 'updateStatus']);
+        Route::post('/payments/{id}/refund', [\App\Http\Controllers\Api\Admin\PaymentAdminController::class, 'refund']);
+    });
+
+    // Also keep product image upload without admin prefix for client compatibility
     Route::post('/products/{id}/image', [ProductMediaController::class, 'upload']);
 
     // Cart (server-side)
