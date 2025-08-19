@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductMediaController;
+use App\Http\Controllers\Api\CategoryMediaController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CatalogController;
 
@@ -69,6 +70,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Product media
         Route::post('/products/{id}/image', [ProductMediaController::class, 'upload']);
 
+        // Category media
+        Route::post('/categories/{id}/image', [CategoryMediaController::class, 'upload']);
+
         // Payments
         Route::get('/payments', [\App\Http\Controllers\Api\Admin\PaymentAdminController::class, 'index']);
         Route::get('/payments/{id}', [\App\Http\Controllers\Api\Admin\PaymentAdminController::class, 'show']);
@@ -78,6 +82,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Also keep product image upload without admin prefix for client compatibility
     Route::post('/products/{id}/image', [ProductMediaController::class, 'upload']);
+
+    // Also allow category image upload without admin prefix
+    Route::post('/categories/{id}/image', [CategoryMediaController::class, 'upload']);
 
     // Cart (server-side)
     Route::get('/cart', [CartController::class, 'show']);
